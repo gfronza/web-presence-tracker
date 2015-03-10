@@ -35,7 +35,7 @@ public class Settings {
 	private static final String REDIS_HOST = "redisHost";
 	private static final String REDIS_PORT = "redisPort";
 	private static final String PRESENCE_TIMEOUT_IN_SECONDS = "presenceTimeoutInSeconds";
-	private static final String SESSIONS_KEY_PREFIX = "sessionsKeyPrefix";
+	private static final String SESSIONS_KEY_PATTERN = "sessionsKeyPrefix";
 	
 	private static final MainLogger _logger = new MainLogger(Settings.class.getName());
 	
@@ -91,8 +91,8 @@ public class Settings {
         return Integer.parseInt(getProperty(PRESENCE_TIMEOUT_IN_SECONDS, "6379"));
     }
 
-    public static String getSessionsKeyPrefix() {
-        return getProperty(SESSIONS_KEY_PREFIX, "sessions_*");
+    public static String getSessionsKeyPattern() {
+        return getProperty(SESSIONS_KEY_PATTERN, "sessions_*");
     }
 
 }

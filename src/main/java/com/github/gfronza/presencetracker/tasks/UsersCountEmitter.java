@@ -90,7 +90,7 @@ public class UsersCountEmitter implements Runnable {
             long presenceTimeout = currentTime - (Settings.getPresenceTimeoutInSeconds() * 1000);
         
             // KEYS session_*
-            Set<String> keys = jedis.keys(Settings.getSessionsKeyPrefix());
+            Set<String> keys = jedis.keys(Settings.getSessionsKeyPattern());
             
             for (String session: keys) {
                 // ZCOUNT session_XPTO <MIN_TIMESTAMP> <CURRENT_TIMESTAMP>

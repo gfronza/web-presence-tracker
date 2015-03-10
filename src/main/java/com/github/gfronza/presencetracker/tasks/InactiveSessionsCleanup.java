@@ -79,7 +79,7 @@ public class InactiveSessionsCleanup implements Runnable {
             long presenceTimeout = currentTime - (Settings.getPresenceTimeoutInSeconds() * 1000);
             
             // KEYS session_*
-            Set<String> keys = jedis.keys(Settings.getSessionsKeyPrefix());
+            Set<String> keys = jedis.keys(Settings.getSessionsKeyPattern());
             
             for (String session: keys) {
                 // ZREMRANGEBYSCORE session_XPTO -inf <MIN_TIMESTAMP>
