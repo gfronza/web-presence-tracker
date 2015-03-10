@@ -17,10 +17,17 @@ package com.github.gfronza.presencetracker.tasks;
 
 import java.util.EventListener;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+
+import com.github.gfronza.presencetracker.Main;
+import com.github.gfronza.presencetracker.Settings;
 
 /**
  * This class is responsible for performing the actual users count of active sessions. 
@@ -34,6 +41,7 @@ public class UsersCountEmitter implements Runnable {
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private final List<Listener> listeners = new CopyOnWriteArrayList<Listener>();
     private final long emitterInterval;
+    private final JedisPool jedisPool = Main.getJedisPool();
     
     /**
      * Create a new emitter with a custom interval (in seconds).
@@ -76,13 +84,23 @@ public class UsersCountEmitter implements Runnable {
      * Execute the users count job itself. 
      */
     public void run() {
-        // KEYS session_*
+        // Jedis instance will be auto-closed after the last statement.
+        try (Jedis jedis = jedisPool.getResource()) {
+            long currentTime = System.currentTimeMillis();
+            long presenceTimeout = currentTime - (Settings.getPresenceTimeoutInSeconds() * 1000);
         
-        // iterate over session keys and for each one count users with:
-        //     ZCOUNT session_XPTO <MIN_TIMESTAMP> <CURRENT_TIMESTAMP>
-        
-        for (Listener listener : listeners) {
-            listener.onUpdate("example", 10);
+            // KEYS session_*
+            Set<String> keys = jedis.keys(Settings.getSessionsKeyPrefix());
+            
+            for (String session: keys) {
+                // ZCOUNT session_XPTO <MIN_TIMESTAMP> <CURRENT_TIMESTAMP>
+                Long zcount = jedis.zcount(session, presenceTimeout, currentTime);
+            
+                // Notify listeners about this count.
+                for (Listener listener : listeners) {
+                    listener.onUpdate(session, zcount);
+                }
+            }
         }
         
         scheduler.schedule(this, this.emitterInterval, TimeUnit.SECONDS);

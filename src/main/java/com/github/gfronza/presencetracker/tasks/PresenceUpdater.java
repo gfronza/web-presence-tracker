@@ -15,8 +15,16 @@
  */
 package com.github.gfronza.presencetracker.tasks;
 
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
+
+import com.github.gfronza.presencetracker.Main;
+import com.github.gfronza.presencetracker.Settings;
 
 /**
  * This class is responsible for updating user presence.
@@ -28,9 +36,11 @@ import java.util.concurrent.Executors;
 public class PresenceUpdater {
 
     private final ExecutorService scheduler;
+    private final JedisPool jedisPool;
     
     public PresenceUpdater() {
         this.scheduler = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        this.jedisPool = Main.getJedisPool();
     }
     
     public void update(String session, String userId) {
@@ -48,7 +58,13 @@ public class PresenceUpdater {
         }
         
         public void run() {
-            // ZADD session_XPTO <CURRENT_TIMESTAMP> <USER_ID>
+            // Jedis instance will be auto-closed after the last statement.
+            try (Jedis jedis = jedisPool.getResource()) {
+                long currentTime = System.currentTimeMillis();
+            
+                // ZADD session_XPTO <CURRENT_TIMESTAMP> <USER_ID>
+                jedis.zadd(session, currentTime, userId);
+            }
         }
         
     }

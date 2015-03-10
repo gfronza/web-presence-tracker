@@ -15,9 +15,16 @@
  */
 package com.github.gfronza.presencetracker.tasks;
 
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+
+import com.github.gfronza.presencetracker.Main;
+import com.github.gfronza.presencetracker.Settings;
 
 /**
  * This class is responsible for performing a cleanup on the sorted sets (old presences).
@@ -31,6 +38,7 @@ public class InactiveSessionsCleanup implements Runnable {
     
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private final long cleanupInterval;
+    private final JedisPool jedisPool = Main.getJedisPool();
     
     /**
      * Create a new emitter with a custom interval (in seconds).
@@ -65,9 +73,30 @@ public class InactiveSessionsCleanup implements Runnable {
      * Execute the users count job itself. 
      */
     public void run() {
-        // ZREMRANGEBYSCORE session_XPTO -inf <MIN_TIMESTAMP>
-        // COUNT session_XPTO
-        // DEL session_XPTO
+        // Jedis instance will be auto-closed after the last statement.
+        try (Jedis jedis = jedisPool.getResource()) {
+            long currentTime = System.currentTimeMillis();
+            long presenceTimeout = currentTime - (Settings.getPresenceTimeoutInSeconds() * 1000);
+            
+            // KEYS session_*
+            Set<String> keys = jedis.keys(Settings.getSessionsKeyPrefix());
+            
+            for (String session: keys) {
+                // ZREMRANGEBYSCORE session_XPTO -inf <MIN_TIMESTAMP>
+                Long zremrangeByScore = jedis.zremrangeByScore(session, "-inf", String.valueOf(presenceTimeout));
+                
+                // If something got removed.
+                if (zremrangeByScore > 0) {
+                    // SCARD session_XPTO
+                    Long sessionActiveUsersCount = jedis.scard(session);
+                    
+                    if (sessionActiveUsersCount == 0) {
+                        // DEL session_XPTO
+                        jedis.del(session);
+                    }
+                }
+            }
+        }
         
         scheduler.schedule(this, this.cleanupInterval, TimeUnit.SECONDS);
     }
