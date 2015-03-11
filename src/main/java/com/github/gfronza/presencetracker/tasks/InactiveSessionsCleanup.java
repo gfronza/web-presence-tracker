@@ -45,7 +45,7 @@ public class InactiveSessionsCleanup implements Runnable {
      * @param emitterInterval
      */
     public InactiveSessionsCleanup(long cleanupInternal) {
-        this.cleanupInterval = cleanupInternal;
+        this.cleanupInterval = cleanupInternal > -1 ? cleanupInternal : DEFAULT_CLEANUP_INTERVAL;
     }
     
     /**

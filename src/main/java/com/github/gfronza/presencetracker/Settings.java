@@ -36,6 +36,8 @@ public class Settings {
 	private static final String REDIS_PORT = "redisPort";
 	private static final String PRESENCE_TIMEOUT_IN_SECONDS = "presenceTimeoutInSeconds";
 	private static final String SESSIONS_KEY_PATTERN = "sessionsKeyPrefix";
+	private static final String USERS_COUNT_EMITTER_TIMEOUT_IN_SECONDS = "usersCountEmitterTimeoutInSecond";
+	private static final String INACTIVE_SESSIONS_CLEANUP_TIMEOUT_IN_SECONDS = "inactiveSessionsCleanupTimeoutInSecond";
 	
 	private static final MainLogger _logger = new MainLogger(Settings.class.getName());
 	
@@ -93,6 +95,14 @@ public class Settings {
 
     public static String getSessionsKeyPattern() {
         return getProperty(SESSIONS_KEY_PATTERN, "sessions_*");
+    }
+
+    public static long getUsersCountEmitterTimeout() {
+        return Long.parseLong(getProperty(USERS_COUNT_EMITTER_TIMEOUT_IN_SECONDS, "-1"));
+    }
+
+    public static long getInactiveSessionsCleanupTimeout() {
+        return Long.parseLong(getProperty(INACTIVE_SESSIONS_CLEANUP_TIMEOUT_IN_SECONDS, "-1"));
     }
 
 }

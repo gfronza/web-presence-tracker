@@ -34,7 +34,7 @@ public class HeartbeatService {
     
     @Listener("/service/heartbeat")
     public void heartbeat(ServerSession session, ServerMessage message) {
-        presenceUpdater.update(message.getChannel(), message.getDataAsMap().get("userId"));
+        presenceUpdater.update(message.getChannel(), (String)message.getDataAsMap().get("userId"));
     }
     
 }

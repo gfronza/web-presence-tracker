@@ -48,7 +48,7 @@ public class UsersCountEmitter implements Runnable {
      * @param emitterInterval
      */
     public UsersCountEmitter(long emitterInterval) {
-        this.emitterInterval = emitterInterval;
+        this.emitterInterval = emitterInterval > -1 ? emitterInterval : DEFAULT_EMITTER_INTERVAL;
     }
     
     /**
