@@ -22,6 +22,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+
+import com.github.gfronza.presencetracker.Main;
 import com.github.gfronza.presencetracker.MainLogger;
 
 /**
@@ -33,16 +37,27 @@ import com.github.gfronza.presencetracker.MainLogger;
 public class Probe extends HttpServlet {
 	
 	static final MainLogger logger = new MainLogger(Probe.class.getName());
+	private final JedisPool jedisPool;
 		
-	private static boolean checkRedis() {
-		return true; // TODO
-	}
+	public Probe() {
+	    this.jedisPool = Main.getJedisPool();
+    }
 	
+	private boolean checkRedis() {
+	    try (Jedis jedis = jedisPool.getResource()) {
+            return jedis.ping().equals("PONG");
+        }
+	    catch (Exception e) {
+	        logger.error("Exception checking redis connection", e);
+            return false;
+        }
+	}
+
 	private String checkAllServices() {
 		boolean redisStatus = checkRedis();
 		boolean overallStatus = redisStatus;
 
-		return String.format("status:%s,redi:%s",
+		return String.format("status:%s,redis:%s",
 				String.valueOf(overallStatus), String.valueOf(redisStatus));
 	}
 
