@@ -13,31 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.gfronza.presencetracker.services;
+package com.github.gfronza.presencetracker.factories;
 
-import javax.inject.Inject;
-
-import org.cometd.annotation.Listener;
-import org.cometd.annotation.Service;
-import org.cometd.bayeux.server.ServerMessage;
-import org.cometd.bayeux.server.ServerSession;
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Produces;
 
 import com.github.gfronza.presencetracker.tasks.PresenceUpdater;
 
 /**
- * This service is used to update presence.
- * @author Germano Fronza.
+ * Factory to create instance of PresenceUpdater.
+ * @author Germano Fronza
  *
  */
-@Service
-public class HeartbeatService {
+public class PresenceUpdaterFactory {
 
-    @Inject
-    private PresenceUpdater presenceUpdater;
-    
-    @Listener("/service/heartbeat")
-    public void heartbeat(ServerSession session, ServerMessage message) {
-        presenceUpdater.update(message.getChannel(), (String)message.getDataAsMap().get("userId"));
+    @Produces @ApplicationScoped
+    public PresenceUpdater createUsersCountEmitter() {
+        return new PresenceUpdater();
     }
     
 }

@@ -18,6 +18,7 @@ package com.github.gfronza.presencetracker.services;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
 import org.cometd.annotation.Service;
@@ -40,9 +41,17 @@ public class UsersCountService implements UsersCountEmitter.Listener {
     @Inject
     private BayeuxServer bayeuxServer;
     
+    @Inject
+    private UsersCountEmitter usersCountEmitter;
+    
     @Session
     private LocalSession sender;
 
+    @PostConstruct
+    public void postConstruct() {
+        usersCountEmitter.addListener(this);
+    }
+    
     public void onUpdate(String session, long usersCount)
     {
         // Create the channel name using the session name.

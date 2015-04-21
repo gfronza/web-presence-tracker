@@ -17,6 +17,7 @@ package com.github.gfronza.presencetracker;
 
 import java.io.IOException;
 
+import javax.inject.Inject;
 import javax.servlet.GenericServlet;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -36,18 +37,16 @@ public class Initializer extends GenericServlet {
 
     private final MainLogger logger = new MainLogger(Initializer.class.getName());
     
-    private final UsersCountEmitter usersCountEmitter;
-    private final InactiveSessionsCleanup inactiveSessionsCleanup;
+    @Inject
+    private UsersCountEmitter usersCountEmitter;
     
-    public Initializer() {
-        logger.info("Initializing Presence-Tracker scheduled tasks.");
-        
-        usersCountEmitter = new UsersCountEmitter(Settings.getUsersCountEmitterTimeout());
-        inactiveSessionsCleanup = new InactiveSessionsCleanup(Settings.getInactiveSessionsCleanupTimeout());
-    }
+    @Inject
+    private InactiveSessionsCleanup inactiveSessionsCleanup;
     
     @Override
     public void init() throws ServletException {
+        logger.info("Starting periodic tasks...");
+
         usersCountEmitter.start();
         inactiveSessionsCleanup.start();
     }
